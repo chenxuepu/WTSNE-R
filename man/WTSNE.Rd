@@ -26,6 +26,7 @@ List with the following elements:
 \item{final_momentum}{Momentum used in the final part of the optimization}
 \item{eta}{Learning rate}
 \item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
+\item{weight}{the weight for cost}
 }
 \description{
 weigth t-Distributed Stochastic Neighbor Embedding

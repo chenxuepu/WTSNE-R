@@ -29,13 +29,20 @@ This is a basic example which shows you how to solve a common problem:
 ``` r
 library(WTSNE)
 library(ggplot2)
+library(MASS)
 ## basic example code
 ```
 
 ``` r
 iris_uni <- unique(iris)
+iris_lda <- MASS::lda(Species~.,iris_uni)
+iris_p <- predict(iris_lda,iris_uni)$posterior
+iris_p_max <- apply(iris_p,1,max)
+
+good_fit <- (iris_p_max > quantile(iris_p_max,0.50))
+weight <- ifelse(good_fit,2,1)
 set.seed(123)
-iris_tsne <- WTSNE(iris_uni[,1:4])
+iris_tsne <- WTSNE(iris_uni[,1:4],weight=weight)
 y <- as.data.frame(iris_tsne$Y)
 y <- cbind(y,iris_uni$Species)
 names(y) <- c("x","y","Species")

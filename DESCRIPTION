@@ -15,4 +15,5 @@ Imports:
     stats,
     magrittr,
     irlba,
-    ggplot2
+    ggplot2,
+    MASS

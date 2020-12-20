@@ -17,6 +17,7 @@
 #' \item{final_momentum}{Momentum used in the final part of the optimization}
 #' \item{eta}{Learning rate}
 #' \item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
+#' \item{weight}{the weight for cost}
 #'
 #' @importFrom stats model.matrix na.fail prcomp rnorm dist
 #' @importFrom magrittr %>%
@@ -39,7 +40,7 @@ WTSNE.default <- function(X, dims = 2, initial_dims = 50,
                           normalize = TRUE, stop_lying_iter = ifelse(is.null(Y_init), 250L,
                                                                      0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
                           momentum = 0.5, final_momentum = 0.8, eta = 200,
-                          exaggeration_factor = 12,...){
+                          exaggeration_factor = 12,weight = rep(1,NROW(X)),...){
 
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
@@ -48,7 +49,7 @@ WTSNE.default <- function(X, dims = 2, initial_dims = 50,
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   tsne.args <- .check_tsne_params(nrow(X), dims=dims, perplexity=perplexity, max_iter=max_iter, verbose=verbose,
                                   Y_init=Y_init, stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter,
-                                  momentum=momentum, final_momentum=final_momentum, eta=eta, exaggeration_factor=exaggeration_factor)
+                                  momentum=momentum, final_momentum=final_momentum, eta=eta, exaggeration_factor=exaggeration_factor,weight = weight)
 
   # Check for missing values
   X <- na.fail(X)
@@ -130,13 +131,13 @@ trainIterations <- function(P,Y,args){
   for(i in 1:args$max_iter){
     if(i==args$stop_lying_iter) P <- P/args$exaggeration_factor
     if(i == args$mom_switch_iter) momentum = args$final_momentum;
-    DY <- computeExactGradient(P,Y)
+    DY <- computeExactGradient(P,Y,args)
     uY <- momentum*uY - args$eta*DY
     Y <- Y+uY
     Y <- zeroMean(Y)
     if((i>1&i%%50==0)|i==args$max_iter){
       end <- Sys.time()
-      C <- evaluateError(P,Y)
+      C <- evaluateError(P,Y,args)
       if(i == 1) {
         if (verbose) print("Iteration ",i,": error is ",C,"\n");
       }
@@ -149,7 +150,7 @@ trainIterations <- function(P,Y,args){
   }
   end <- Sys.time()
   total_time <-  total_time + end - start
-  cost <- getCost(P,Y)
+  cost <- getCost(P,Y,args)
   if (verbose) print("Fitting performed in ",total_time,"\n")
   out <- list(Y = Y,costs = cost)
 
@@ -157,7 +158,7 @@ trainIterations <- function(P,Y,args){
 
 
 
-computeExactGradient <- function(P,Y){
+computeExactGradient <- function(P,Y,args){
   dc <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
   DD <- dist(Y) %>% as.matrix()
   DD <- DD^2
@@ -167,7 +168,7 @@ computeExactGradient <- function(P,Y){
   for(i in 1:nrow(Y)){
     for(j in 1:nrow(Y)){
       if(i!=j){
-        mult <- (P[i,j]-Q[i,j]/sum_Q)*Q[i,j]
+        mult <- (P[i,j]-Q[i,j]/sum_Q)*Q[i,j]*args$weight[i]
         for(k in 1:ncol(Y)){
           dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
         }
@@ -183,24 +184,26 @@ zeroMean <- function(Y){
 
 
 
-evaluateError <- function(P,Y){
+evaluateError <- function(P,Y,args){
+  w <- matrix(args$weight,nrow = nrow(Y),ncol = nrow(Y))
   DD <- dist(Y) %>% as.matrix()
   DD <- DD^2
   Q <- 1/(1+DD)
   diag(Q) <- 0
   Q <- Q/sum(Q)
-  C <- (P*log((P+1e-9)/(Q+1e-9))) %>% sum
+  C <- (w*P*log((P+1e-9)/(Q+1e-9))) %>% sum
   return(C)
 }
 
 
-getCost <- function(P,Y){
+getCost <- function(P,Y,args){
+  w <- matrix(args$weight,nrow = nrow(Y),ncol = nrow(Y))
   DD <- dist(Y) %>% as.matrix()
   DD <- DD^2
   Q <- 1/(1+DD)
   diag(Q) <- 0
   Q <- Q/sum(Q)
-  Cost <- (P*log((P+1e-9)/(Q+1e-9))) %>% rowSums()
+  Cost <- (w*P*log((P+1e-9)/(Q+1e-9))) %>% rowSums()
   return(Cost)
 }
 
