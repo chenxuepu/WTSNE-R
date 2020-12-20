@@ -226,6 +226,7 @@ computeGaussianPerplexity <- function(X,is_distance,perplexity){
     iter <- 0
     while(!found&iter<200){
       p <- exp(-beta*x)
+      x[is.na(x)] <- 0
       p[is.na(p)] <- 0
       sum_p <- sum(p)
       H <- sum(beta*x*p)/sum_p+log(sum_p)
