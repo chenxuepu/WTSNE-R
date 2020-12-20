@@ -134,6 +134,7 @@ trainIterations <- function(P,Y,args){
     if(i == args$mom_switch_iter) momentum = args$final_momentum;
     DY <- computeExactGradient(P,Y,args)
     gains <- ifelse(sign(DY)!=sign(uY),gains+0.2,gains*0.8)
+    gains[gains<0.01] <- 0.01
     uY <- momentum*uY - args$eta*DY*gains
     Y <- Y+uY
     Y <- zeroMean(Y)
