@@ -105,7 +105,7 @@ RTsne_R <- function(X,is_distance,args){
     Y <- args$Y_in
     if (verbose) cat("Using user supplied starting positions\n");
   } else{
-    Y <- matrix(rnorm(nrow(X)*args$no_dims,sd = 10^-2),ncol = args$no_dims)
+    Y <- matrix(rnorm(nrow(X)*args$no_dims,sd = 10^-4),ncol = args$no_dims)
   }
   if (verbose) cat("Using no_dims =", args$no_dims, ", perplexity =",args$perplexity,"\n");
   if (verbose) cat("Computing input similarities...\n");
