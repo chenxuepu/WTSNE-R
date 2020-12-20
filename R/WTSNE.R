@@ -109,7 +109,7 @@ RTsne_R <- function(X,is_distance,args){
   if (verbose) cat("Using no_dims =", args$no_dims, ", perplexity =",args$perplexity,"\n");
   if (verbose) cat("Computing input similarities...\n");
   start <- Sys.time()
-  if (verbose) print("Symmetrizing...\n");
+  if (verbose) cat("Symmetrizing...\n");
   P <- computeGaussianPerplexity(X,is_distance,args$perplexity) %>%
     Symmetrize()
   end <- Sys.time()
@@ -138,11 +138,11 @@ trainIterations <- function(P,Y,args){
       end <- Sys.time()
       C <- evaluateError(P,Y)
       if(i == 1) {
-        if (verbose) print("Iteration ",i,": error is ",C,"\n");
+        if (verbose) cat("Iteration ",i,": error is ",C,"\n");
       }
       else {
         total_time <-  total_time + end - start
-        if (verbose) print("Iteration ",i,": error is ",C," (50 iterations ",end - start,")\n")
+        if (verbose) cat("Iteration ",i,": error is ",C," (50 iterations ",end - start,")\n")
       }
       start <- Sys.time()
     }
@@ -150,7 +150,7 @@ trainIterations <- function(P,Y,args){
   end <- Sys.time()
   total_time <-  total_time + end - start
   cost <- getCost(P,Y)
-  if (verbose) print("Fitting performed in ",total_time,"\n")
+  if (verbose) cat("Fitting performed in ",total_time,"\n")
   out <- list(Y = Y,costs = cost)
 
 }
@@ -212,6 +212,7 @@ computeGaussianPerplexity <- function(X,is_distance,perplexity){
   else{
     D <- X
   }
+  diag(D) <- NA
   apply(D, 1, function(x){
     found <- FALSE
     beta <- 1.0
@@ -222,7 +223,7 @@ computeGaussianPerplexity <- function(X,is_distance,perplexity){
     iter <- 0
     while(!found&iter<200){
       p <- exp(-beta*x)
-      p[x==0] <- 0
+      p[is.na(p)] <- 0
       sum_p <- sum(p)
       H <- sum(beta*x*p)/sum_p+log(sum_p)
       Hdiff <- H-log(perplexity)
