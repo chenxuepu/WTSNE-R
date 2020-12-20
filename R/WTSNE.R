@@ -128,11 +128,13 @@ trainIterations <- function(P,Y,args){
   total_time <- 0
   momentum <- args$momentum
   uY <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
+  gains <- matrix(1,nrow = nrow(Y),ncol = ncol(Y))
   for(i in 1:args$max_iter){
     if(i==args$stop_lying_iter) P <- P/args$exaggeration_factor
     if(i == args$mom_switch_iter) momentum = args$final_momentum;
     DY <- computeExactGradient(P,Y,args)
-    uY <- momentum*uY - args$eta*DY
+    gains <- ifelse(sign(DY)!=sign(uY),gains+0.2,gains*0.8)
+    uY <- momentum*uY - args$eta*DY*gains
     Y <- Y+uY
     Y <- zeroMean(Y)
     if((i>1&i%%50==0)|i==args$max_iter){
