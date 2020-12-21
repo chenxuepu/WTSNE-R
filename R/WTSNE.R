@@ -244,7 +244,7 @@ computeGaussianPerplexity <- function(X,is_distance,perplexity){
           }
         }else{
           max_beta <- beta
-          if(min_beta == Inf){
+          if(min_beta == -Inf){
             beta <- beta/2
           }else{
             beta <- (beta + min_beta)/2
