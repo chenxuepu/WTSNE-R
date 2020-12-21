@@ -130,7 +130,7 @@ trainIterations <- function(P,Y,args){
   uY <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
   gains <- matrix(1,nrow = nrow(Y),ncol = ncol(Y))
   for(i in 1:args$max_iter){
-    if(i==args$stop_lying_iter) P <- P/args$exaggeration_factor
+    if(i == args$stop_lying_iter) P <- P/args$exaggeration_factor
     if(i == args$mom_switch_iter) momentum = args$final_momentum;
     DY <- computeExactGradient(P,Y,args)
     gains <- ifelse(sign(DY)!=sign(uY),gains+0.2,gains*0.8)
@@ -172,9 +172,7 @@ computeExactGradient <- function(P,Y,args){
     for(j in 1:nrow(Y)){
       if(i!=j){
         mult <- (P[i,j]-Q[i,j]/sum_Q)*Q[i,j]*args$weight[i]
-        for(k in 1:ncol(Y)){
-          dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
-        }
+        dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
       }
     }
   }
