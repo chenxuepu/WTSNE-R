@@ -37,7 +37,7 @@ WTSNE.default <- function(X, dims = 2, initial_dims = 50,
                           verbose = getOption("verbose", FALSE), is_distance = FALSE,
                           Y_init = NULL, pca_center = TRUE, pca_scale = FALSE,
                           normalize = TRUE, stop_lying_iter = ifelse(is.null(Y_init), 250L,
-                                                                     0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
+                                                                     1L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 1L),
                           momentum = 0.5, final_momentum = 0.8, eta = 200,
                           exaggeration_factor = 12,...){
 
@@ -114,7 +114,7 @@ RTsne_R <- function(X,is_distance,args){
   P <- computeGaussianPerplexity(X,is_distance,args$perplexity) %>%
     Symmetrize()
   end <- Sys.time()
-  if (verbose) cat("Done in ",(end - start),"\nLearning embedding...\n");
+  if (verbose) cat("Done in ",as.character.Date(end - start),"\nLearning embedding...\n");
   trainIterations(P,Y,args)
 }
 
@@ -146,7 +146,7 @@ trainIterations <- function(P,Y,args){
       }
       else {
         total_time <-  total_time + end - start
-        if (verbose) cat("Iteration ",i,": error is ",C," (50 iterations ",end - start,")\n")
+        if (verbose) cat("Iteration ",i,": error is ",C," (50 iterations ",as.character.Date(end - start),")\n")
       }
       start <- Sys.time()
     }
@@ -154,7 +154,7 @@ trainIterations <- function(P,Y,args){
   end <- Sys.time()
   total_time <-  total_time + end - start
   cost <- getCost(P,Y)
-  if (verbose) cat("Fitting performed in ",total_time,"\n")
+  if (verbose) cat("Fitting performed in ",as.character.Date(total_time),"\n")
   out <- list(Y = Y,costs = cost)
 
 }
@@ -171,7 +171,7 @@ computeExactGradient <- function(P,Y){
   for(i in 1:nrow(Y)){
     for(j in 1:nrow(Y)){
       if(i!=j){
-        mult <- (P[i,j]-Q[i,j]/sum_Q)*Q[i,j]
+        mult <- (P[i,j]-(Q[i,j]/sum_Q))*Q[i,j]
         dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
       }
     }
@@ -225,10 +225,10 @@ computeGaussianPerplexity <- function(X,is_distance,perplexity){
     iter <- 0
     while(!found&iter<200){
       p <- exp(-beta*x)
-      x[is.na(x)] <- 0
+      # x[is.na(x)] <- 0
       p[is.na(p)] <- 0
       sum_p <- sum(p)
-      H <- sum(beta*x*p)/sum_p+log(sum_p)
+      H <- sum(beta*x*p,na.rm = TRUE)/sum_p+log(sum_p)
       Hdiff <- H-log(perplexity)
       if(abs(Hdiff) < tol){
         found <- TRUE

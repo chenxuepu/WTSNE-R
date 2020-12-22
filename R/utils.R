@@ -60,7 +60,7 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)
 
   init <- !is.null(Y_init)
   if (init) {
-    Y_init <- t(Y_init) # transposing for rapid column-major access.
+    Y_init <- Y_init # transposing for rapid column-major access.
   } else {
     Y_init <- matrix()
   }
