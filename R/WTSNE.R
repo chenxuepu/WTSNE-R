@@ -161,20 +161,36 @@ trainIterations <- function(P,Y,args){
 
 
 
+# computeExactGradient <- function(P,Y){
+#   dc <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
+#   DD <- dist(Y) %>% as.matrix()
+#   DD <- DD^2
+#   Q <- 1/(1+DD)
+#   diag(Q) <- 0
+#   sum_Q <- sum(Q)
+#   for(i in 1:nrow(Y)){
+#     for(j in 1:nrow(Y)){
+#       if(i!=j){
+#         mult <- (P[i,j]-(Q[i,j]/sum_Q))*Q[i,j]
+#         dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
+#       }
+#     }
+#   }
+#   return(dc)
+# }
+
+
 computeExactGradient <- function(P,Y){
-  dc <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
+  n <- nrow(Y)
+  dc <- matrix(0,nrow = n,ncol = ncol(Y))
   DD <- dist(Y) %>% as.matrix()
   DD <- DD^2
   Q <- 1/(1+DD)
   diag(Q) <- 0
   sum_Q <- sum(Q)
-  for(i in 1:nrow(Y)){
-    for(j in 1:nrow(Y)){
-      if(i!=j){
-        mult <- (P[i,j]-(Q[i,j]/sum_Q))*Q[i,j]
-        dc[i,] <- dc[i,] + (Y[i,] - Y[j,])*mult
-      }
-    }
+  M <- (P-(Q/sum_Q))*Q
+  for(i in 1:ncol(Y)){
+    dc[,i] <- (M %*% (matrix(Y[,i],n,n,byrow = T)-matrix(Y[,i],n,n))) %>% diag()
   }
   return(dc)
 }
