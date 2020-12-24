@@ -16,4 +16,5 @@ Imports:
     magrittr,
     irlba,
     ggplot2,
-    MASS
+    MASS,
+    Rcpp

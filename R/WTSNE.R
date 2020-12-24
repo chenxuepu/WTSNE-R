@@ -133,11 +133,13 @@ trainIterations <- function(P,Y,args){
     if(i == args$stop_lying_iter) P <- P/args$exaggeration_factor
     if(i == args$mom_switch_iter) momentum = args$final_momentum;
     DY <- computeExactGradient(P,Y,args)
-    gains <- ifelse(sign(DY)!=sign(uY),gains+0.2,gains*0.8)
+    gains <- ifelse(sign_tsne(DY)!=sign_tsne(uY),gains+0.2,gains*0.8)
     gains[gains<0.01] <- 0.01
-    uY <- momentum*uY - args$eta*DY*gains
-    Y <- Y+uY
-    Y <- zeroMean(Y)
+    # uY <- momentum*uY - gains*DY*args$eta
+    uY <- cpp_add(momentum,uY,gains,args$eta,DY)
+    # Y <- Y+uY
+    Y <- cpp_add2(Y,uY)
+    # Y <- zeroMean(Y)
     if((i>1&i%%50==0)|i==args$max_iter){
       end <- Sys.time()
       C <- evaluateError(P,Y,args)
@@ -159,7 +161,22 @@ trainIterations <- function(P,Y,args){
 
 }
 
+Rcpp::cppFunction('NumericMatrix cpp_add(double momentum,NumericMatrix uY,NumericMatrix gains,double eta,NumericMatrix DY){
+  int N = uY.nrow(),D = uY.ncol();
+  for(unsigned int i = 0; i < N * D; i++) uY[i] = momentum * uY[i] - eta * gains[i] * DY[i];
+  return uY;
+}')
 
+Rcpp::cppFunction('NumericMatrix cpp_add2(NumericMatrix Y,NumericMatrix uY){
+  int N = uY.nrow(),D = uY.ncol();
+  for(unsigned int i = 0; i < N * D; i++) Y[i] += uY[i];
+  return Y;
+}')
+
+
+sign_tsne <- function(x){
+  ifelse(x==0,0,ifelse(x<0,-1,1))
+}
 
 # computeExactGradient <- function(P,Y,args){
 #   dc <- matrix(0,nrow = nrow(Y),ncol = ncol(Y))
