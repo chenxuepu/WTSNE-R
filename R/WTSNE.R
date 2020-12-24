@@ -135,7 +135,7 @@ trainIterations <- function(P,Y,args){
     DY <- computeExactGradient(P,Y)
     gains <- ifelse(sign(DY)!=sign(uY),gains+0.2,gains*0.8)
     gains[gains<0.01] <- 0.01
-    uY <- momentum*uY - args$eta*DY*gains
+    uY <- momentum*uY - gains*DY*args$eta
     Y <- Y+uY
     Y <- zeroMean(Y)
     if((i>1&i%%50==0)|i==args$max_iter){
